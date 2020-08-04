@@ -31,7 +31,7 @@
 #import <Social/Social.h>
 #import "ShareViewController.h"
 
-@interface ShareViewController : SLComposeServiceViewController {
+@interface ShareViewController : UIViewController {
     int _verbosityLevel;
     NSUserDefaults *_userDefaults;
     NSString *_backURL;
@@ -66,9 +66,11 @@
 - (void) warn:(NSString*)message { [self log:VERBOSITY_WARN message:message]; }
 - (void) error:(NSString*)message { [self log:VERBOSITY_ERROR message:message]; }
 
-- (void)viewDidLoad {
-    //Edit "post" button title
-    [[self navigationController] navigationBar].topItem.rightBarButtonItem.title = @"Add to Inbox";
+-(void) viewDidLoad {
+    [super viewDidLoad];
+    printf("did load");
+    [self debug:@"[viewDidLoad]"];
+    [self submit];
 }
 
 - (void) setup {
@@ -128,9 +130,10 @@
     }
 }
 
-- (void) didSelectPost {
+- (void) submit {
+
     [self setup];
-    [self debug:@"[didSelectPost]"];
+    [self debug:@"[submit]"];
 
     NSItemProvider* itemProvider;
     NSArray* attachments = ((NSExtensionItem*)self.extensionContext.inputItems[0]).attachments;
