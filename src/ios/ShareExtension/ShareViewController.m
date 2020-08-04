@@ -236,7 +236,6 @@
         uti = SHAREEXT_UNIFORM_TYPE_IDENTIFIER;
     }
     NSDictionary *dict = @{
-                           @"text": self.contentText,
                            @"backURL": self.backURL,
                            @"data" : data,
                            @"uti": uti,
@@ -246,7 +245,6 @@
 
     if (urlString != nil) {
         dict = @{
-           @"text": self.contentText,
            @"backURL": self.backURL,
            @"data" : data,
            @"uti": uti,

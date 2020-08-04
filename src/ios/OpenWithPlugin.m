@@ -267,7 +267,6 @@ static NSDictionary* launchOptions = nil;
             @"action": @"SEND",
             @"exit": @YES,
             @"items": @[@{
-                @"text" : text,
                 @"base64": [data convertToBase64],
                 @"type": type,
                 @"utis": utis,
@@ -283,12 +282,11 @@ static NSDictionary* launchOptions = nil;
             @"action": @"SEND",
             @"exit": @YES,
             @"items": @[@{
-            @"text" : text,
-            @"base64": [data convertToBase64],
-            @"type": type,
-            @"utis": utis,
-            @"uri": uri,
-            @"name": name
+              @"base64": [data convertToBase64],
+              @"type": type,
+              @"utis": utis,
+              @"uri": uri,
+              @"name": name
             }]
         }];
         pluginResult.keepCallback = [NSNumber numberWithBool:YES];
