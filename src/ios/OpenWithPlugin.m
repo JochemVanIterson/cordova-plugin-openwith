@@ -135,7 +135,7 @@ static NSDictionary* launchOptions = nil;
 
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onResume) name:UIApplicationWillEnterForegroundNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(defaultsChanged:) name:NSUserDefaultsDidChangeNotification object:nil];
-    
+
     // NOTE: if you want to use these, make sure you uncomment the corresponding notification handler
     // [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onPause) name:UIApplicationDidEnterBackgroundNotification object:nil];
     // [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onOrientationWillChange) name:UIApplicationWillChangeStatusBarOrientationNotification object:nil];
@@ -238,7 +238,7 @@ static NSDictionary* launchOptions = nil;
     NSData *data = dict[@"data"];
     NSString *text = dict[@"text"];
     NSString *name = dict[@"name"];
-    
+
     self.backURL = dict[@"backURL"];
     NSString *type = [self mimeTypeFromUti:dict[@"uti"]];
     if (![data isKindOfClass:NSData.class] || ![text isKindOfClass:NSString.class]) {
@@ -260,11 +260,11 @@ static NSDictionary* launchOptions = nil;
 
     NSString *uri = [NSString stringWithFormat: @"shareextension://index=0,name=%@,type=%@",
         name, type];
-    
-    
+
+
     if (dict[@"urlString"] != nil){
         NSString *urlString = dict[@"urlString"];
-        
+
         CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:@{
             @"action": @"SEND",
             @"exit": @YES,
@@ -296,7 +296,7 @@ static NSDictionary* launchOptions = nil;
         pluginResult.keepCallback = [NSNumber numberWithBool:YES];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:self.handlerCallback];
     }
-    
+
 }
 
 // Initialize the plugin

@@ -84,38 +84,38 @@
 - (void) openURL:(nonnull NSURL *)url {
     if (@available(iOS 13.0, *)) {
         SEL selector = NSSelectorFromString(@"openURL:");
-        
+
         UIResponder* responder = self;
         while ((responder = [responder nextResponder]) != nil) {
             NSLog(@"responder = %@", responder);
             if([responder respondsToSelector:selector] == true) {
                 NSMethodSignature *methodSignature = [responder methodSignatureForSelector:selector];
                 NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:methodSignature];
-                
+
                 [invocation setTarget: responder];
                 [invocation setSelector: selector];
                 [invocation setArgument: &url atIndex: 2];
-                
+
                 [invocation invoke];
                 break;
             }
         }
     }else{
         SEL selector = NSSelectorFromString(@"openURL:options:completionHandler:");
-        
+
         UIResponder* responder = self;
         while ((responder = [responder nextResponder]) != nil) {
             NSLog(@"responder = %@", responder);
             if([responder respondsToSelector:selector] == true) {
                 NSMethodSignature *methodSignature = [responder methodSignatureForSelector:selector];
                 NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:methodSignature];
-                
+
                 // Arguments
                 NSDictionary<NSString *, id> *options = [NSDictionary dictionary];
                 void (^completion)(BOOL success) = ^void(BOOL success) {
                     NSLog(@"Completions block: %i", success);
                 };
-                
+
                 [invocation setTarget: responder];
                 [invocation setSelector: selector];
                 [invocation setArgument: &url atIndex: 2];
@@ -141,42 +141,44 @@
              itemProvider = shareItemProvider;
          }
     }
-    
+
     if (itemProvider == nil){
          for (NSItemProvider* shareItemProvider in ((NSExtensionItem*)self.extensionContext.inputItems[0]).attachments) {
              itemProvider = shareItemProvider;
              break;
          }
     }
-    
+
     // This is called after the user selects Post. Do the upload of contentText and/or NSExtensionContext attachments.
     if (itemProvider != nil) {
         if ([itemProvider hasItemConformingToTypeIdentifier:SHAREEXT_UNIFORM_TYPE_IDENTIFIER]) {
             [self debug:[NSString stringWithFormat:@"item provider = %@", itemProvider]];
-            
+
             [itemProvider loadItemForTypeIdentifier:SHAREEXT_UNIFORM_TYPE_IDENTIFIER options:nil completionHandler: ^(id<NSSecureCoding> item, NSError *error) {
-                
+
                 if ([itemProvider hasItemConformingToTypeIdentifier:@"public.url"] && ![itemProvider hasItemConformingToTypeIdentifier:@"public.content"]){
                     NSItemProviderCompletionHandler urlHandler = ^(NSURL *item, NSError *error) {
-                        
+
                         NSData *data = [NSData dataWithContentsOfURL: [NSURL URLWithString:[item absoluteString]]];
                         [self finishSelectingPost:itemProvider data:data urlString: [item absoluteString]];
                     };
-                    
+
                     [itemProvider loadItemForTypeIdentifier:@"public.url" options:nil completionHandler:urlHandler];
                 }else{
+                    NSLog(@"_________itemProvider_________:\n %@", itemProvider);
                     NSData *data = [[NSData alloc] init];
                     if([(NSObject*)item isKindOfClass:[NSURL class]]) {
                         data = [NSData dataWithContentsOfURL:(NSURL*)item];
-                    }
-                    if([(NSObject*)item isKindOfClass:[UIImage class]]) {
+                    } else if([(NSObject*)item isKindOfClass:[UIImage class]]) {
                         data = UIImagePNGRepresentation((UIImage*)item);
+                    } else {
+                        data = [NSData dataWithData:(NSData*)item];
                     }
-                    
+
                     if (item){
                         [self finishSelectingPost:itemProvider data:data urlString: nil];
-                    }else{
-                        
+                    } else {
+
                         NSItemProviderCompletionHandler imageHandler = ^(UIImage *item, NSError *error) {
                             NSData *newData = [[NSData alloc] init];
                             if([(NSObject*)item isKindOfClass:[UIImage class]]) {
@@ -184,13 +186,15 @@
                             }
                             [self finishSelectingPost:itemProvider data:newData urlString: nil];
                         };
-                        
+
                         NSItemProviderCompletionHandler urlHandler = ^(NSData *item, NSError *error) {
                             [self finishSelectingPost:itemProvider data:item urlString:nil];
                         };
-                        
+
                         if([itemProvider hasItemConformingToTypeIdentifier:@"public.image"]) {
                             [itemProvider loadItemForTypeIdentifier:@"public.image" options:nil completionHandler:imageHandler];
+                        } else if([itemProvider hasItemConformingToTypeIdentifier:@"public.vcard"]) {
+                            [itemProvider loadItemForTypeIdentifier:@"public.vcard" options:nil completionHandler:urlHandler];
                         } else if([itemProvider hasItemConformingToTypeIdentifier:@"public.url"]) {
                             [itemProvider loadItemForTypeIdentifier:@"public.url" options:nil completionHandler:urlHandler];
                         } else if([itemProvider hasItemConformingToTypeIdentifier:@"public.movie"]) {
@@ -199,7 +203,7 @@
                             [itemProvider loadItemForTypeIdentifier:@"public.item" options:nil completionHandler:urlHandler];
                             [self debug:[NSString stringWithFormat:@"Unknown attachment type = %@", itemProvider]];
                         }
-                        
+
                     }
                 }
             }];
@@ -218,7 +222,7 @@
     if ([itemProvider respondsToSelector:NSSelectorFromString(@"getSuggestedName")]) {
         suggestedName = [itemProvider valueForKey:@"suggestedName"];
     }
-    
+
     NSString *uti = @"";
     NSArray<NSString *> *utis = [NSArray new];
     if ([itemProvider.registeredTypeIdentifiers count] > 0) {
@@ -236,7 +240,7 @@
                            @"utis": utis,
                            @"name": suggestedName
                            };
-    
+
     if (urlString != nil) {
         dict = @{
            @"text": self.contentText,
@@ -250,7 +254,7 @@
     }
     [self.userDefaults setObject:dict forKey:@"image"];
     [self.userDefaults synchronize];
-    
+
     // Emit a URL that opens the cordova app
     NSString *url = [NSString stringWithFormat:@"%@://image", SHAREEXT_URL_SCHEME];
     [self openURL:[NSURL URLWithString:url]];
@@ -260,11 +264,11 @@
     dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
         NSTimeInterval  today = [[NSDate date] timeIntervalSince1970];
         NSString *intervalString = [NSString stringWithFormat:@"%f", today];
-      
+
         [self.userDefaults setObject:intervalString forKey:@"dismissedShareExtension"];
         [self.userDefaults synchronize];
     });
-    
+
     // Inform the host that we're done, so it un-blocks its UI.
     [self.extensionContext completeRequestReturningItems:@[] completionHandler:nil];
 }
